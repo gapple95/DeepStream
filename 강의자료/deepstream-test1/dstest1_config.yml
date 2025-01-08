@@ -11,7 +11,7 @@
 ################################################################################
 
 source:
-  location: ../../../../samples/streams/sample_720p.h264
+  location: /opt/nvidia/deepsteram/deepstream-7.1/samples/streams/sample_720p.h264
 
 streammux:
   batch-size: 1
