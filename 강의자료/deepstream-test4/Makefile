@@ -37,7 +37,7 @@ PKGS:= gstreamer-1.0
 
 OBJS:= $(CPP_SRCS:.cpp=.o) $(C_SRCS:.c=.o)
 
-CFLAGS+= -I../../../includes \
+CFLAGS+= -I/opt/nvidia/deepstream/deepstream-7.1/sources/includes \
 		 -I /usr/local/cuda-$(CUDA_VER)/include
 
 CFLAGS+= $(shell pkg-config --cflags $(PKGS))

@@ -188,7 +188,7 @@ SETUP:
 
   7. Enable logging:
        Go through the README to setup & enable logs for the messaging libraries(kafka, azure, amqp)
-         $ cat ../../../tools/nvds_logger/README
+         $ cat /opt/nvidia/deepstream/deepstream-7.1/sources/tools/nvds_logger/README
 
 
 ===============================================================================
