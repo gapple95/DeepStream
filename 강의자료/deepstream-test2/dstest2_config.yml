@@ -11,7 +11,7 @@
 ################################################################################
 
 source:
-  location: /opt/nvidia/deepsteram/deepstream-7.1/samples/streams/sample_720p.h264
+  location: /opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.h264
 
 streammux:
   batch-size: 1
@@ -26,11 +26,11 @@ tracker:
   gpu-id: 0
   ll-lib-file: /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
   # ll-config-file required to set different tracker types
-  # ll-config-file: /opt/nvidia/deepsteram/deepstream-7.1/samples/configs/deepstream-app/config_tracker_IOU.yml
-  # ll-config-file: /opt/nvidia/deepsteram/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvSORT.yml
-  ll-config-file: /opt/nvidia/deepsteram/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
-  # ll-config-file: /opt/nvidia/deepsteram/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
-  # ll-config-file: /opt/nvidia/deepsteram/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDeepSORT.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream-7.1/samples/configs/deepstream-app/config_tracker_IOU.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvSORT.yml
+  ll-config-file: /opt/nvidia/deepstream/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDCF_accuracy.yml
+  # ll-config-file: /opt/nvidia/deepstream/deepstream-7.1/samples/configs/deepstream-app/config_tracker_NvDeepSORT.yml
 
 # Inference using nvinfer:
 primary-gie:

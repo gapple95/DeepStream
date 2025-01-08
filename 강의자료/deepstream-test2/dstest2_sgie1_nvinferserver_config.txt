@@ -19,7 +19,7 @@ infer_config {
       model_name: "Secondary_VehicleMake"
       version: -1
       model_repo {
-        root: "/opt/nvidia/deepsteram/deepstream-7.1/samples/triton_model_repo"
+        root: "/opt/nvidia/deepstream/deepstream-7.1/samples/triton_model_repo"
         strict_model_config: true
       }
     }
@@ -37,7 +37,7 @@ infer_config {
   }
 
   postprocess {
-    labelfile_path: "/opt/nvidia/deepsteram/deepstream-7.1/samples/models/Secondary_VehicleMake/labels.txt"
+    labelfile_path: "/opt/nvidia/deepstream/deepstream-7.1/samples/models/Secondary_VehicleMake/labels.txt"
     classification {
       threshold: 0.51
     }
