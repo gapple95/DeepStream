@@ -154,10 +154,8 @@ int main(int argc, char *argv[])
 {
   GMainLoop *loop = NULL;
   GstElement *pipeline = NULL, *source = NULL, *h264parser = NULL,
-             *decoder = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL, *nvvidconv = NULL,
-             *nvosd = NULL;
-  // output 영상을 위한 요소 추가
-  Gstelement *enc = NULL, *filesink = NULL;
+             *decoder = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL, 
+             *nvvidconv = NULL, *nvosd = NULL, *enc = NULL, *filesink = NULL;
 
   GstBus *bus = NULL;
   guint bus_watch_id;
@@ -169,6 +167,7 @@ int main(int argc, char *argv[])
   cudaGetDevice(&current_device);
   struct cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, current_device);
+
   /* Check input arguments */
   if (argc != 2)
   {
@@ -192,46 +191,18 @@ int main(int argc, char *argv[])
   }
 
   /* Create gstreamer elements */
-  /* Create Pipeline element that will form a connection of other elements */
   pipeline = gst_pipeline_new("dstest1-pipeline");
 
   /* Source element for reading from the file */
   source = gst_element_factory_make("filesrc", "file-source");
-
-  /* Since the data format in the input file is elementary h264 stream,
-   * we need a h264parser */
   h264parser = gst_element_factory_make("h264parse", "h264-parser");
-
-  /* Use nvdec_h264 for hardware accelerated decode on GPU */
   decoder = gst_element_factory_make("nvv4l2decoder", "nvv4l2-decoder");
-
-  /* Create nvstreammux instance to form batches from one or more sources. */
   streammux = gst_element_factory_make("nvstreammux", "stream-muxer");
-
-  if (!pipeline || !streammux)
-  {
-    g_printerr("One element could not be created. Exiting.\n");
-    return -1;
-  }
-
-  /* Use nvinfer or nvinferserver to run inferencing on decoder's output,
-   * behaviour of inferencing is set through config file */
-  if (pgie_type == NVDS_GIE_PLUGIN_INFER_SERVER)
-  {
-    pgie = gst_element_factory_make("nvinferserver", "primary-nvinference-engine");
-  }
-  else
-  {
-    pgie = gst_element_factory_make("nvinfer", "primary-nvinference-engine");
-  }
-
-  /* Use convertor to convert from NV12 to RGBA as required by nvosd */
+  pgie = gst_element_factory_make("nvinfer", "primary-nvinference-engine");
   nvvidconv = gst_element_factory_make("nvvideoconvert", "nvvideo-converter");
-
-  /* Create OSD to draw on the converted RGBA buffer */
   nvosd = gst_element_factory_make("nvdsosd", "nv-onscreendisplay");
-  
-  // output영상을 만들기 위한 요소 선언
+
+  /* New elements for saving the output */
   enc = gst_element_factory_make("nvv4l2h264enc", "h264-encoder");
   filesink = gst_element_factory_make("filesink", "file-sink");
 
@@ -283,6 +254,5 @@ int main(int argc, char *argv[])
   gst_object_unref(GST_OBJECT(pipeline));
   g_source_remove(bus_watch_id);
   g_main_loop_unref(loop);
-  
   return 0;
 }
