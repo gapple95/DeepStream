@@ -156,6 +156,8 @@ int main(int argc, char *argv[])
   GstElement *pipeline = NULL, *source = NULL, *h264parser = NULL,
              *decoder = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL, *nvvidconv = NULL,
              *nvosd = NULL;
+  // output 영상을 위한 요소 추가
+  Gstelement *enc = NULL, *filesink = NULL;
 
   GstBus *bus = NULL;
   guint bus_watch_id;
@@ -228,121 +230,43 @@ int main(int argc, char *argv[])
 
   /* Create OSD to draw on the converted RGBA buffer */
   nvosd = gst_element_factory_make("nvdsosd", "nv-onscreendisplay");
+  
+  // output영상을 만들기 위한 요소 선언
+  enc = gst_element_factory_make("nvv4l2h264enc", "h264-encoder");
+  filesink = gst_element_factory_make("filesink", "file-sink");
 
-  /* Finally render the osd output */
-  if (prop.integrated)
-  {
-    sink = gst_element_factory_make("nv3dsink", "nv3d-sink");
-  }
-  else
-  {
-#ifdef __aarch64__
-    sink = gst_element_factory_make("nv3dsink", "nvvideo-renderer");
-#else
-    sink = gst_element_factory_make("nveglglessink", "nvvideo-renderer");
-#endif
-  }
-
-  if (!source || !h264parser || !decoder || !pgie || !nvvidconv || !nvosd || !sink)
+  /* Check if elements are created successfully */
+  if (!pipeline || !source || !h264parser || !decoder || !streammux || 
+      !pgie || !nvvidconv || !nvosd || !enc || !filesink)
   {
     g_printerr("One element could not be created. Exiting.\n");
     return -1;
   }
 
-  /* we set the input filename to the source element */
+  /* Set element properties */
   g_object_set(G_OBJECT(source), "location", argv[1], NULL);
+  g_object_set(G_OBJECT(streammux), "batch-size", 1, "width", MUXER_OUTPUT_WIDTH,
+               "height", MUXER_OUTPUT_HEIGHT, "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);
+  g_object_set(G_OBJECT(pgie), "config-file-path", "dstest1_pgie_config.txt", NULL);
+  g_object_set(G_OBJECT(filesink), "location", "output.mp4", NULL);
 
-  if (g_str_has_suffix(argv[1], ".h264"))
-  {
-    g_object_set(G_OBJECT(source), "location", argv[1], NULL);
-
-    g_object_set(G_OBJECT(streammux), "batch-size", 1, NULL);
-
-    g_object_set(G_OBJECT(streammux), "width", MUXER_OUTPUT_WIDTH, "height",
-                 MUXER_OUTPUT_HEIGHT,
-                 "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);
-
-    /* Set all the necessary properties of the nvinfer element,
-     * the necessary ones are : */
-    g_object_set(G_OBJECT(pgie),
-                 "config-file-path", "dstest1_pgie_config.txt", NULL);
-  }
-
-  if (yaml_config)
-  {
-    RETURN_ON_PARSER_ERROR(nvds_parse_file_source(source, argv[1], "source"));
-    RETURN_ON_PARSER_ERROR(nvds_parse_streammux(streammux, argv[1], "streammux"));
-
-    /* Set all the necessary properties of the inference element */
-    RETURN_ON_PARSER_ERROR(nvds_parse_gie(pgie, argv[1], "primary-gie"));
-  }
-
-  /* we add a message handler */
-  bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  bus_watch_id = gst_bus_add_watch(bus, bus_call, loop);
-  gst_object_unref(bus);
-
-  /* Set up the pipeline */
-  /* we add all elements into the pipeline */
+  /* Add elements to the pipeline */
   gst_bin_add_many(GST_BIN(pipeline),
                    source, h264parser, decoder, streammux, pgie,
-                   nvvidconv, nvosd, sink, NULL);
-  g_print("Added elements to bin\n");
+                   nvvidconv, nvosd, enc, filesink, NULL);
 
-  GstPad *sinkpad, *srcpad;
-  gchar pad_name_sink[16] = "sink_0";
-  gchar pad_name_src[16] = "src";
-
-  sinkpad = gst_element_request_pad_simple(streammux, pad_name_sink);
-  if (!sinkpad)
-  {
-    g_printerr("Streammux request sink pad failed. Exiting.\n");
-    return -1;
-  }
-
-  srcpad = gst_element_get_static_pad(decoder, pad_name_src);
-  if (!srcpad)
-  {
-    g_printerr("Decoder request src pad failed. Exiting.\n");
-    return -1;
-  }
-
-  if (gst_pad_link(srcpad, sinkpad) != GST_PAD_LINK_OK)
-  {
-    g_printerr("Failed to link decoder to stream muxer. Exiting.\n");
-    return -1;
-  }
-
-  gst_object_unref(sinkpad);
-  gst_object_unref(srcpad);
-
-  /* we link the elements together */
-  /* file-source -> h264-parser -> nvh264-decoder ->
-   * pgie -> nvvidconv -> nvosd -> video-renderer */
-
+  /* Link elements together */
   if (!gst_element_link_many(source, h264parser, decoder, NULL))
   {
-    g_printerr("Elements could not be linked: 1. Exiting.\n");
+    g_printerr("Elements could not be linked: source to decoder. Exiting.\n");
     return -1;
   }
 
-  if (!gst_element_link_many(streammux, pgie,
-                             nvvidconv, nvosd, sink, NULL))
+  if (!gst_element_link_many(streammux, pgie, nvvidconv, nvosd, enc, filesink, NULL))
   {
-    g_printerr("Elements could not be linked: 2. Exiting.\n");
+    g_printerr("Elements could not be linked: streammux to filesink. Exiting.\n");
     return -1;
   }
-
-  /* Lets add probe to get informed of the meta data generated, we add probe to
-   * the sink pad of the osd element, since by that time, the buffer would have
-   * had got all the metadata. */
-  osd_sink_pad = gst_element_get_static_pad(nvosd, "sink");
-  if (!osd_sink_pad)
-    g_print("Unable to get sink pad\n");
-  else
-    gst_pad_add_probe(osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
-                      osd_sink_pad_buffer_probe, NULL, NULL);
-  gst_object_unref(osd_sink_pad);
 
   /* Set the pipeline to "playing" state */
   g_print("Using file: %s\n", argv[1]);
@@ -352,12 +276,13 @@ int main(int argc, char *argv[])
   g_print("Running...\n");
   g_main_loop_run(loop);
 
-  /* Out of the main loop, clean up nicely */
+  /* Clean up */
   g_print("Returned, stopping playback\n");
   gst_element_set_state(pipeline, GST_STATE_NULL);
   g_print("Deleting pipeline\n");
   gst_object_unref(GST_OBJECT(pipeline));
   g_source_remove(bus_watch_id);
   g_main_loop_unref(loop);
+  
   return 0;
 }
