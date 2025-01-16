@@ -11,7 +11,8 @@
 ################################################################################
 
 source:
-  location: /opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.h264
+  type: appsrc
+  enable: 1
 
 streammux:
   batch-size: 1
@@ -22,9 +23,9 @@ streammux:
 # Inference using nvinfer:
 primary-gie:
   plugin-type: 0
-  config-file-path: dstest1_pgie_config.yml
+  config-file-path: dsoakd_pgie_config.yml
 
 ## Inference using nvinferserver:
 #primary-gie:
 #  plugin-type: 1
-#  config-file-path: dstest1_pgie_nvinferserver_config.txt
+#  config-file-path: dsoakd_pgie_nvinferserver_config.txt

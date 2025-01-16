@@ -15,7 +15,9 @@ ifeq ($(CUDA_VER),)
   $(error "CUDA_VER is not set")
 endif
 
-APP:= deepstream-test1-app
+CC = g++
+
+APP:= deepstream-oakd-app
 
 TARGET_DEVICE = $(shell gcc -dumpmachine | cut -f1 -d -)
 
@@ -37,7 +39,9 @@ PKGS:= gstreamer-1.0
 OBJS:= $(SRCS:.c=.o)
 
 CFLAGS+= -I/opt/nvidia/deepstream/deepstream-7.1/sources/includes \
-		-I /usr/local/cuda-$(CUDA_VER)/include
+		-I /usr/local/cuda-$(CUDA_VER)/include 
+
+
 
 CFLAGS+= $(shell pkg-config --cflags $(PKGS))
 
@@ -45,7 +49,9 @@ LIBS:= $(shell pkg-config --libs $(PKGS))
 
 LIBS+= -L/usr/local/cuda-$(CUDA_VER)/lib64/ -lcudart \
 		-L$(LIB_INSTALL_DIR) -lnvdsgst_meta -lnvds_meta -lnvds_yml_parser -lnvdsgst_helper \
-		-lcuda -Wl,-rpath,$(LIB_INSTALL_DIR) \
+		-lcuda -Wl,-rpath,$(LIB_INSTALL_DIR) 
+		
+LIBS+= $(shell pkg-config --libs opencv4)
 
 all: $(APP)
 
