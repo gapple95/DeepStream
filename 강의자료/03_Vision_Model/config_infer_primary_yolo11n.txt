@@ -1,9 +1,15 @@
 [property]
 gpu-id=0
-model-engine-file=yolo11n.engine
+net-scale-factor=0.00392
+model-engine-file=/home/paymentinapp/Desktop/lecture/DeepStream/강의자료/03_Vision_Model/yolo11n.engine
 labelfile-path=labels.txt
 batch-size=1
 network-mode=0
 num-detected-classes=80
 interval=0
 gie-unique-id=1
+output-blob-names=output0
+
+[class-attrs-all]
+nms-iou-threshold=0.45
+pre-cluster-threshold=0.5
