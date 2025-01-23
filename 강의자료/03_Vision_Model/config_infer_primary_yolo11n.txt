@@ -1,0 +1,9 @@
+[property]
+gpu-id=0
+model-engine-file=yolo11n.engine
+labelfile-path=labels.txt
+batch-size=1
+network-mode=0
+num-detected-classes=80
+interval=0
+gie-unique-id=1
