@@ -1,0 +1,25 @@
+[property]
+gpu-id=0
+net-scale-factor=0.0039215697906911373
+offsets=0;0;0
+model-engine-file=yolov8n.engine
+labelfile-path=labels.txt
+batch-size=1
+network-mode=2
+num-detected-classes=80
+interval=0
+gie-unique-id=1
+process-mode=1
+infer-dims=3;640;640
+maintain-aspect-ratio=1
+output-blob-names=output0
+force-implicit-batch-dim=1
+uff-input-blob-name=input_1
+parse-bbox-func-name=NvDsInferParseYolo
+custom-lib-path=nvdsinfer_custom_impl_Yolo/libnvdsinfer_custom_impl_Yolo.so
+# 1~79번 클래스(사람 제외) 필터링
+filter-out-class-ids=1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35;36;37;38;39;40;41;42;43;44;45;46;47;48;49;50;51;52;53;54;55;56;57;58;59;60;61;62;63;64;65;66;67;68;69;70;71;72;73;74;75;76;77;78;79
+
+[class-attrs-all]
+threshold=0.7
+eps=0.7
