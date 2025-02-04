@@ -12,7 +12,7 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "deepstream_person_detect"
 
-client = mqtt.Client()
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_start()
 
@@ -48,7 +48,7 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
         l_obj = frame_meta.obj_meta_list
         while l_obj:
             obj_meta = pyds.NvDsObjectMeta.cast(l_obj.data)
-            if obj_meta.class_id == 2:  # 'person' 클래스
+            if obj_meta.class_id == 2:
                 send_mqtt_message(obj_meta)
             l_obj = l_obj.next
         l_frame = l_frame.next
@@ -88,7 +88,7 @@ def create_pipeline():
     
     for element in elements:
         if not element:
-            sys.stderr.write(f" {element.name} 생성에 실패했습니다. \n")
+            sys.stderr.write(f"{element} 생성 실패\n")
             sys.exit(1)
         pipeline.add(element)
     
@@ -124,7 +124,12 @@ def on_message(bus, message):
 
 bus.connect("message", on_message)
 
-sink_pad = pipeline.get_by_name("nvdsosd").get_static_pad("sink")
+nvosd_element = pipeline.get_by_name("on-screen-display")
+if not nvosd_element:
+    print("오류: 'nvdsosd' 요소를 찾을 수 없습니다.")
+    sys.exit(1)
+
+sink_pad = nvosd_element.get_static_pad("sink")
 sink_pad.add_probe(Gst.PadProbeType.BUFFER, osd_sink_pad_buffer_probe, None)
 
 pipeline.set_state(Gst.State.PLAYING)
